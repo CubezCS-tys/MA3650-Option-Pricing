@@ -1,0 +1,1 @@
+Intrinsic value: Is the price a given otpion would have if it were exercised to today.

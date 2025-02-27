@@ -1,0 +1,107 @@
+    (NEED TO COMMENT THIS OUT) This approach aligns with the weak form of market efficiency, which posits that all historical price information is already reflected in today’s price. Consequently, technical analysts, who rely on past price trends, should not be able to consistently earn above-average returns. The competitive nature of financial markets helps ensure that stock prices exhibit this Markov property and conform to weak-form efficiency.
+
+# Key Insights
+st.subheader("Key Insights")
+st.write("""
+1. **Variance and Time**:
+   - The variance of the change in $z(t)$ is proportional to the time elapsed.
+   - For example, the variance of $z(T)$ over $T$ years is $T$, and the standard deviation is $\\sqrt{T}$.
+
+2. **Additivity of Variances**:
+   - When Markov processes are considered, the variances of changes in successive time intervals are additive.
+   - For instance, the variance of $z(2)$ over 2 years is $2.0$, and the variance over 3 years is $3.0$.
+
+3. **Square Root Rule**:
+   - The standard deviation grows with the square root of time. This explains why uncertainty in such processes increases with time but does so at a slower rate than the variance.
+""")
+
+# Example
+st.subheader("Example: Probability Distribution over Time")
+st.write("""
+Suppose $z(0) = 25$ and we consider the process over a time period $T = 1$:
+- After one year, the process follows:
+  $$
+  z(1) - z(0) \\sim \\phi(0, 1).
+  $$
+  The distribution of $z(1)$ is $\\phi(25, 1)$, meaning:
+  - Mean = $25$,
+  - Variance = $1$,
+  - Standard Deviation = $1.0$.
+
+If $T = 5$, then the process follows:
+$$
+z(5) - z(0) \\sim \\phi(0, 5).
+$$
+- The distribution of $z(5)$ is $\\phi(25, 5)$, with:
+  - Mean = $25$,
+  - Variance = $5$,
+  - Standard Deviation = $\\sqrt{5} \\approx 2.236$.
+""")
+
+# Applications in Finance
+st.subheader("Applications in Finance")
+st.write("""
+1. **Stock Price Modelling**:
+   - Wiener processes are used to model the random movement of asset prices in the Black-Scholes model.
+   - They form the basis for Geometric Brownian Motion, which incorporates drift and volatility.
+
+2. **Risk Analysis**:
+   - The square root of time property is used in risk management to calculate value-at-risk (VaR) over different time horizons.
+""")
+
+
+# Explanation of Terms
+st.subheader("Components of the Generalized Wiener Process")
+st.write("""
+1. **Drift Term ($a \\, dt$)**:
+   - Represents the deterministic part of the process.
+   - If $b = 0$, the equation becomes $dx = a \\, dt$, implying that $x$ changes linearly over time.
+
+2. **Volatility Term ($b \\, dz$)**:
+   - Adds randomness to the process.
+   - $b$ scales the magnitude of variability introduced by the Wiener process $dz$.
+
+The combined effect of these terms allows the generalized Wiener process to model both predictable trends and random fluctuations.
+""")
+
+# Applications
+st.subheader("Applications in Finance")
+st.write("""
+1. **Stock Price Modelling**:
+   - The generalized Wiener process is used to model stock prices in the Black-Scholes framework.
+   - Incorporates both drift (expected return) and volatility (risk).
+
+2. **Risk Analysis**:
+   - Useful for modeling uncertain financial variables, such as cash flows or portfolio returns.
+
+3. **Other Domains**:
+   - Physics (Brownian motion with drift),
+   - Engineering (stochastic processes in control systems),
+   - Biology (random processes in population dynamics).
+""")
+            
+# Key Insights
+st.subheader("Key Insights")
+st.write("""
+1. **Dynamic Drift and Volatility**:
+   - Unlike the generalised Wiener process, where $a$ and $b$ are constants, the Itô process allows these parameters to vary, providing more flexibility in modelling.
+
+2. **Approximation Assumption**:
+   - The equation assumes that $a(x, t)$ and $b(x, t)$ remain constant over the small interval $[t, t + \\Delta t]$, which simplifies the analysis.
+
+3. **Applications**:
+   - The Itô process is a foundation for stochastic calculus, used in models like the Black-Scholes equation for option pricing.
+""")
+
+# Applications
+st.subheader("Applications")
+st.write("""
+1. **Financial Modelling**:
+   - The Itô process is widely used in finance to model asset prices and interest rates, where drift and volatility change over time.
+   
+2. **Physics and Biology**:
+   - In physics, it models systems with state-dependent noise, and in biology, it describes population dynamics and diffusion.
+
+3. **Control Systems**:
+   - Used in engineering to design systems where randomness affects state changes dynamically.
+""")

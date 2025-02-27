@@ -1,0 +1,35 @@
+% Parameters for asset path simulation
+S0 = 100;          % Initial stock price
+mu = 0.05;         % Drift
+sigma = 0.2;       % Volatility
+T = 1;             % Time to maturity
+NSteps = 100;      % Number of time steps
+NRepl = 1000;      % Number of replications (paths)
+
+% Simulate asset paths
+SPaths = AssetPaths(S0, mu, sigma, T, NSteps, NRepl); % Or use AssetPathsV
+
+% Power option parameters
+K = 100;    % Strike price
+p = 2;      % Power exponent
+
+% Calculate the payoff for each path at maturity
+final_prices = SPaths(:, end); % Use the final price of each path
+power_call_payoff = max(final_prices.^p - K, 0);
+power_put_payoff = max(K - final_prices.^p, 0);
+
+% Plot Power Call Option Payoff
+figure;
+plot(final_prices, power_call_payoff, 'o');
+title(['Power Call Option Payoff (K = ' num2str(K) ', p = ' num2str(p) ')']);
+xlabel('Underlying Asset Price at Maturity');
+ylabel('Payoff');
+grid on;
+
+% Plot Power Put Option Payoff
+figure;
+plot(final_prices, power_put_payoff, 'o');
+title(['Power Put Option Payoff (K = ' num2str(K) ', p = ' num2str(p) ')']);
+xlabel('Underlying Asset Price at Maturity');
+ylabel('Payoff');
+grid on;
