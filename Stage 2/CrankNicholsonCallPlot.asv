@@ -1,6 +1,6 @@
 
 S0=150; % Initial Stock Price
-K=150; % Strike Price
+K=140; % Strike Price
 r=0.05; % Risk-free interest rate
 q = 0;
 T=0.5; % Time to expiration (6 months)

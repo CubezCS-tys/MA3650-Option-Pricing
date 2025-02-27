@@ -1,4 +1,4 @@
-function price = AmPutCK(S0,K,r,q,T,sigma,Smax,dS,dt,omega,tol)
+function price = AmPowerPutCK(S0,K,r,q,T,sigma,Smax,dS,dt,omega,tol,p)
 M = round(Smax/dS); dS = Smax/M; % set up grid
 N = round(T/dt); dt = T/N;
 oldval = zeros(M-1,1); % vectors for Gauss-Seidel update
@@ -6,7 +6,7 @@ newval = zeros(M-1,1);
 vetS = linspace(0,Smax,M+1)';
 veti = 0:M; vetj = 0:N;
 % set up boundary conditions
-payoff = max(K-vetS(2:M),0);
+payoff = max(K-(vetS(2:M).^p),0);
 pastval = payoff; % values for the last layer
 boundval = K*exp(-r*dt*(N-vetj)); % boundary values
 % set up the coefficients and the right hand side matrix
