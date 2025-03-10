@@ -33,18 +33,17 @@
 
 function [price, vetS, matval] = FloatingStrikeCallImp(S0,Min,r,T,sigma,Smax,dS,dt)
 % set up grid and adjust increments if necessary
-z = Smax/Min;
-Sz = S0/
-M = round(Smax/dS);
-dS = Smax/M;
+z = Smax/Min
+M = round(z/dS);
+dS = z/M;
 N = round(T/dt);
 dt = T/N;
 matval = zeros(M+1,N+1);
-vetS = linspace(0,Smax,M+1)'; % Create a column vector (vetS) containing M+1 equally spaced asset prices from 0 to Smax.
+vetz = linspace(0,z,M+1)'; % Create a column vector (vetS) containing M+1 equally spaced asset prices from 0 to Smax.
 veti = 0:M;
 vetj = 0:N;
 % set up boundary conditions
-matval(:,N+1) = max(vetS-Min,0);
+matval(:,N+1) = max(vetz-1,0);
 matval(1,:) = 0;
 matval(M+1,:) = (Smax)-Min*exp(-r * dt * (N-vetj));
 % set up the coefficients matrix
@@ -69,7 +68,3 @@ end
 
 %return price, possibly by linear interpolation outside the grid
 price = interp1(vetS, matval(:,1), S0);
-
-
-
-

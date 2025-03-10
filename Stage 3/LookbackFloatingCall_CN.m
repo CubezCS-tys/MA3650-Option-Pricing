@@ -1,187 +1,276 @@
-function price = LookbackFloatingCall_CN(S0, M0, r, q, sigma, T, Nx, Xmax, Nt)
-% LookbackFloatingCall_CN: Prices a floating-strike lookback call
-%   via a one-dimensional Crank-Nicolson finite-difference method.
+function LookbackFloatingCall_CN()
+% LOOKBACKFLOATINGCALL_CN
+% ----------------------------------------------------------
+% This script derives and solves (via Crank–Nicolson) the PDE
+% for a floating-strike lookback call option in the transformed
+% variable z = S / m, where m is the running minimum of S.
 %
-% Inputs:
-%   S0    = current spot price
-%   M0    = running minimum so far
-%   r     = risk-free rate
-%   q     = dividend yield
-%   sigma = volatility
-%   T     = time to maturity
-%   Nx    = number of x-grid steps
-%   Xmax  = maximum x-value in grid (x = S/M)
-%   Nt    = number of time steps
+% ----------------------------------------------------------
+% 1) PROBLEM SETUP AND PDE DERIVATION
 %
-% Output:
-%   price = option value at time 0 (for S0, M0)
+% For a floating-strike call, the payoff at T is:
+%     Payoff = S(T) - m   (assuming S >= m)
+%
+% Define z = S / m  =>  S = m*z,  and let
+%     V(S, m, t) = m * u(z, t).
+%
+% In the usual risk-neutral setting (with dividend yield q), S follows
+%     dS = (r - q)*S dt + sigma*S dW,
+% and for S > m, the minimum m is constant. One shows (via Itô’s lemma
+% and standard arguments) that V(S,m,t) satisfies the Black–Scholes PDE
+% for S>m. Substituting V = m*u(z,t), S = m*z, and m constant, we get
+%
+%     u_t + 0.5*sigma^2 * z^2 * u_{zz} + (r - q)*z*u_z - r*u = 0,
+%
+% on the domain z >= 1. The terminal condition at t = T comes from
+% the payoff:
+%
+%     V(S,m,T) = S - m  =>  m*u(z,T) = m*(z - 1)  =>  u(z,T) = z - 1.
+%
+% Boundary conditions in z-space are typically:
+%   - At z=1,  u(1,t) = 0,   (since S=m => payoff ~ 0)
+%   - For large z,  u(z,t) ~ (z - 1).  In practice, we truncate at
+%       z = zMax  and set  u(zMax,t) = zMax - 1.
+%
+% ----------------------------------------------------------
+% 2) CRANK–NICOLSON FINITE-DIFFERENCE SCHEME
+%
+% We discretize the PDE
+%
+%   u_t = 0.5*sigma^2*z^2*u_{zz} + (r - q)*z*u_z - r*u
+%
+% backward in time from t=T to t=0 using a uniform grid in z
+% (z_i, i=0..M) and uniform time steps (n=0..N).  We store the
+% solution in a matrix U(i,n) = u(z_i, t_n).  The standard
+% Crank–Nicolson method leads to tridiagonal systems at each time step.
+%
+% ----------------------------------------------------------
+% 3) EXAMPLE USAGE
+% We pick some parameters and solve for 0 <= t <= T, 1 <= z <= zMax,
+% then plot the final solution (u(z,0)) vs. z and also convert to
+% V(S,0) = m*u(z,0) vs. S = m*z.
+%
+% NOTE: This code is purely demonstrative. In production, you may
+% refine the grid, boundary conditions, or the PDE operator.
 
-    % 1) Transform S, M -> x = S / M
-    x0 = S0 / M0;  % The 'current' x we care about
-    
-    % 2) Set up the spatial grid in x
-    %    We let x range from 1 to Xmax.  x=1 => S=M, the lowest ratio.
-    dx = (Xmax - 1) / Nx;
-    xGrid = linspace(1, Xmax, Nx+1)';  % column vector: x_0=1, x_Nx=Xmax
-    
-    % 3) Set up the time grid
-    dt = T / Nt;
-    tVals = linspace(0, T, Nt+1);  % tVals(Nt+1) = T
-    
-    % 4) Terminal condition: v(x,T) = x - 1
-    %    We'll store v at each time step in a vector V.
-    %    V(i) corresponds to v(x_i, t_n).
-    vNow = max(xGrid - 1, 0);  % at t = T
-    
-    % 5) Coefficients for PDE: dv/dt = A(v)
-    %    A(v) = 0.5*sigma^2*x^2*v'' + (r-q)*x*v' - r*v
-    %    We'll build the finite-difference matrix for the interior nodes.
-    
-    % Precompute alpha_i, beta_i for each x_i
-    % alpha_i => (r-q)*x_i
-    % beta_i  => 0.5*sigma^2*x_i^2
-    alpha = (r - q) * xGrid;
-    beta  = 0.5 * sigma^2 * (xGrid.^2);
-    
-    % Build tri-di matrices for the operator L(v) in space.
-    % We'll do i=2..Nx (interior), with boundary i=1 (x=1) and i=Nx+1 (x=Xmax).
-    
-    % Initialize arrays for sub-, main-, super-diagonal
-    mainDiag = zeros(Nx+1,1);
-    lowerDiag = zeros(Nx+1,1);
-    upperDiag = zeros(Nx+1,1);
-    
-    % Finite difference stencils:
-    % v''(x_i) ~ [v_{i+1} - 2 v_i + v_{i-1}] / dx^2
-    % v'(x_i)  ~ [v_{i+1} - v_{i-1}] / (2 dx)
+    close all; clc;
+
+    % -------------------------------
+    % Model / Option Parameters
+    % -------------------------------
+    S0    = 100;      % Current underlying price
+    m0    = 80;       % Running minimum so far
+    r     = 0.1;     % Risk-free rate
+    q     = 0.00;     % Dividend yield
+    sigma = 0.4;     % Volatility
+    T     = 1.0;      % Time to maturity
+
+    % -------------------------------
+    % Numerical Discretization
+    % -------------------------------
+    zMax  = 5;        % Maximum ratio = Smax/m0, e.g. we assume S can go ~5*m0
+    M     = 200;      % Number of z steps
+    N     = 200;      % Number of time steps
+    dz    = (zMax - 1)/M;  % spacing in z
+    dt    = T / N;         % spacing in time
+
+    % Solve PDE with Crank-Nicolson
+    [zGrid, Ufinal] = SolveLookbackCallCN(r, q, sigma, T, zMax, M, N);
+
+    % -------------------------------
+    % Interpolate to find solution at z0 = S0/m0
+    % Then multiply by m0 => the actual option value at S0
+    % -------------------------------
+    z0   = S0 / m0;
+    U0   = interp1(zGrid, Ufinal(:,1), z0, 'linear', 'extrap');
+    V0   = m0 * U0;
+
+    fprintf('Option value at S0=%.2f (m=%.2f) is %.4f\n', S0, m0, V0);
+
+    % -------------------------------
+    % Plot: 1) u(z,0) vs. z
+    %       2) V(S,0) vs. S
+    % -------------------------------
+    figure(1);
+    plot(zGrid, Ufinal(:,1), 'b-', 'LineWidth',1.5);
+    xlabel('z = S/m');  ylabel('u(z,0)');  grid on;
+    title('Floating-Strike Lookback Call in z-space (u vs. z)');
+
+    % Convert to S = m0*z,  V = m0*u
+    Sgrid = m0 * zGrid;
+    Vgrid = m0 * Ufinal(:,1);
+
+    figure(2);
+    plot(Sgrid, Vgrid, 'r-', 'LineWidth',1.5);
+    xlabel('Stock Price S');  ylabel('Option Value');
+    title('Floating-Strike Lookback Call vs. S');  grid on;
+
+end  % end of main function
+
+
+
+function [zVals, U] = SolveLookbackCallCN(r, q, sigma, T, zMax, M, N)
+% SolveLookbackCallCN:
+%   Uses Crank–Nicolson to solve the PDE
+%      u_t = 0.5*sigma^2 * z^2 * u_{zz}
+%            + (r-q)*z * u_z
+%            - r * u
+%   for 1 <= z <= zMax, and  0 <= t <= T.
+%
+% Discretization:
+%   - z in [1, zMax],  M steps => M+1 points
+%   - t in [0, T],     N steps => N+1 time levels
+%   - We'll store U(i,n) = u(z_i, t_n).
+%   - We'll step backward in time from n=N (t=T) down to n=0 (t=0).
+%
+% Boundary/terminal conditions:
+%   - Terminal: u(z,T) = z - 1,  for  z >= 1.
+%   - z=1 boundary: u(1,t) = 0
+%   - z=zMax boundary: u(zMax,t) = zMax - 1
+%
+% Returns:
+%   zVals: (M+1)x1 vector of z grid points
+%   U    : (M+1)x(N+1) matrix of the solution, so U(:,n+1) = u(z, t_n).
+
+    % Setup grids
+    dz = (zMax - 1)/M;
+    zVals = linspace(1, zMax, M+1)';   % z_0=1, z_M=zMax
+
+    dt = T / N;
+    tVals = linspace(0, T, N+1);  % we will use tVals(N+1)=T
+
+    % Initialize solution matrix
+    U = zeros(M+1, N+1);
+
+    % -- Terminal condition at t=T --
+    %    u(z,T) = z - 1
+    U(:, N+1) = zVals - 1;
+
+    % -- Boundary conditions in z --
+    % z=1 => U(1,n) = 0
+    % z=zMax => U(M+1,n) = zMax - 1
+    U(1,:) = 0;
+    U(M+1,:) = zMax - 1;
+
+    % Build coefficient arrays for the PDE operator
+    % PDE:  u_t = A[u] = 0.5*sigma^2*z^2*u_{zz} + (r-q)*z*u_z - r*u
     %
-    % => L(v_i) = beta_i/dx^2 * [v_{i+1} - 2v_i + v_{i-1}] 
-    %           + alpha_i/(2 dx)* [v_{i+1} - v_{i-1}] 
-    %           - r * v_i
+    % We'll define discrete i=1..M+1.  The interior points are i=2..M.
+    % For each i, define:
+    %   alpha_i   = 0.5*sigma^2*z_i^2 / (dz^2)
+    %   beta_i(+) = (r-q)*z_i / (2*dz)
+    %   beta_i(-) = -(r-q)*z_i / (2*dz)
+    %   plus the -r factor on the diagonal.
     %
-    % We'll fill the interior rows i=2..Nx.  For i=1 and i=Nx+1 we impose BCs.
-    
-    for i = 2:Nx  % interior points
-        xi     = xGrid(i);
-        alpha_i = alpha(i);
-        beta_i  = beta(i);
-        
-        % Coeff of v_{i-1}, v_i, v_{i+1} in L(v_i)
-        %    L(v_i) = c_{i-1}*v_{i-1} + c_i*v_i + c_{i+1}*v_{i+1}.
-        
-        c_im1 = beta_i/dx^2 - alpha_i/(2*dx);
-        c_i   = -2*beta_i/dx^2 - r;
-        c_ip1 = beta_i/dx^2 + alpha_i/(2*dx);
-        
-        lowerDiag(i) = c_im1;
-        mainDiag(i)  = c_i;
-        upperDiag(i) = c_ip1;
+    % Then in standard 2nd-order finite differences:
+    %   u_{zz}(z_i) ~ [u_{i+1} - 2u_i + u_{i-1}] / dz^2
+    %   u_z(z_i)   ~ [u_{i+1} - u_{i-1}] / (2 dz)
+
+    iArr = (0:M)';   % so that z_i = 1 + i*dz, but we'll build operator for i=2..M-1
+
+    % Precompute for each i:
+    zMid = 1 + iArr*dz;    % same as zVals, but we'll skip boundary i=1 & i=M+1
+    alpha = 0.5 * sigma^2 .* (zMid.^2) / (dz^2);
+    % For the drift term:
+    plusBeta  = ((r - q) .* zMid) / (2*dz);
+    minusBeta = -plusBeta;
+
+    % The reaction term -r on the diagonal
+    % Summarize operator L:
+    %   L[u_i] = alpha_i*(u_{i+1}-2u_i+u_{i-1})
+    %          + plusBeta_i*(u_{i+1}) + minusBeta_i*(u_{i-1})
+    %          - r*u_i
+    %
+    % We'll form the tri-di matrix for interior i=2..M.
+
+    % For Crank–Nicolson, define:
+    %   A = I - (dt/2)*L
+    %   B = I + (dt/2)*L
+    % so that:  A*u^{n} = B*u^{n+1}.
+
+    % Build the interior dimension = M-1
+    mainDiag = zeros(M-1,1);
+    lowerDiag= zeros(M-2,1);
+    upperDiag= zeros(M-2,1);
+
+    for i = 2:M
+        iLoc = i-1;  % local index in [1..M-1]
+        a_i  = alpha(i);
+        b_p  = plusBeta(i);
+        b_m  = minusBeta(i);
+
+        % Coeff for PDE: L[u_i]
+        %   from alpha*(u_{i+1}-2u_i+u_{i-1})
+        %     => +alpha for u_{i+1}, -2alpha for u_i, +alpha for u_{i-1}
+        %   from plusBeta*(u_{i+1}) + minusBeta*(u_{i-1})
+        %     => +b_p for u_{i+1}, +b_m for u_{i-1}
+        %   from -r*u_i
+        % => net for u_{i-1}: (alpha + b_m)
+        % => net for u_i:    (-2 alpha - r)
+        % => net for u_{i+1}:(alpha + b_p)
+
+        c_im1 = a_i + b_m;       % lower
+        c_i   = -2*a_i - r;      % main
+        c_ip1 = a_i + b_p;       % upper
+
+        mainDiag(iLoc) = c_i;
+        if iLoc>1
+            lowerDiag(iLoc-1) = c_im1;
+        end
+        if iLoc<(M-1)
+            upperDiag(iLoc) = c_ip1;
+        end
     end
-    
-    % Now incorporate boundary conditions:
-    % We'll do Dirichlet at x=1 (i=1) and x=Xmax (i=Nx+1).
-    % That means v(1,t) and v(Xmax,t) are set from BCs, not from PDE interior.
-    %
-    % For a floating-strike call:
-    %  - At x=1, one might approximate v(1,t)=0 for all t < T 
-    %    (since if S=M, the call is near 'intrinsic = 0', ignoring small time value).
-    %  - At x=Xmax, we often approximate v(Xmax,t) ~ Xmax - 1 
-    %    (large S vs. M => payoff ~ S - M => ratio ~ x => v ~ x - 1).
-    %
-    % A more refined boundary can be used, but we'll keep it simple here.
-    
-    % We'll handle these in the time-stepping by setting v(1) and v(Nx+1)
-    % after each solve, rather than building them into the matrix rows.
-    
-    % 6) Construct the Crank-Nicolson matrices:
-    % We want: v^{n+1} - v^n = (dt/2)*[ L(v^n) + L(v^{n+1}) ]
-    % => (I - dt/2 * L) v^{n+1} = (I + dt/2 * L) v^n
-    %
-    % We'll build L as a tridiagonal matrix. Then define:
-    % A = I - (dt/2)*L
-    % B = I + (dt/2)*L
-    %
-    % Because the boundary is Dirichlet, we’ll fix the top/bottom rows after forming A,B.
-    
-    Ldiag_main = mainDiag;  % store for building L
-    Ldiag_lower = lowerDiag;
-    Ldiag_upper = upperDiag;
-    
-    % Build sparse L
-    % interior rows i=2..Nx
-    % row i => mainDiag(i), lowerDiag(i), upperDiag(i)
-    % We'll keep row 1 and Nx+1 = 0 because they are Dirichlet boundaries.
-    
-    nnzmax = 3*(Nx+1); 
-    rowIdx = [];
-    colIdx = [];
-    valL   = [];
-    
-    for i=2:Nx
-        % main
-        rowIdx = [rowIdx; i];
-        colIdx = [colIdx; i];
-        valL   = [valL; Ldiag_main(i)];
-        % lower
-        rowIdx = [rowIdx; i];
-        colIdx = [colIdx; i-1];
-        valL   = [valL; Ldiag_lower(i)];
-        % upper
-        rowIdx = [rowIdx; i];
-        colIdx = [colIdx; i+1];
-        valL   = [valL; Ldiag_upper(i)];
-    end
-    % Build L as sparse
-    Lmat = sparse(rowIdx, colIdx, valL, Nx+1, Nx+1, nnzmax);
-    
-    % Identity
-    Imat = speye(Nx+1);
-    
-    A = Imat - 0.5*dt * Lmat;
-    B = Imat + 0.5*dt * Lmat;
-    
-    % 7) Backward time stepping: from n=Nt down to n=0
-    vOld = vNow;  % at t = T
-    for n = Nt:-1:1
-        t_n   = tVals(n);   %#ok (not used explicitly, but can be helpful)
-        t_n1  = tVals(n+1); %#ok
-        
-        % Right-hand side = B * vOld
-        rhs = B * vOld;
-        
-        % Enforce boundary conditions in rhs:
-        %   v(1) = 0, v(Nx+1) = (xGrid(end) - 1).
+
+    % Build L as a sparse tridiagonal matrix
+    Lmat = spdiags([lowerDiag mainDiag upperDiag], [-1 0 1], M-1, M-1);
+
+    % Build A, B for Crank–Nicolson
+    Iint = speye(M-1);
+    A = Iint - 0.5*dt * Lmat;
+    B = Iint + 0.5*dt * Lmat;
+
+    % We solve from n=N down to n=0
+    for n = N:-1:1
+        % The vector on the interior is U(2..M, n+1)
+        uOld = U(2:M, n+1);
+
+        % Right side = B*uOld + boundary adjustments
+        rhs = B * uOld;
+
+        % Boundary adjustments come from the known Dirichlet values at i=1 and i=M+1:
+        %   i=1   => U(1,n)   = 0
+        %   i=M+1 => U(M+1,n) = zMax - 1
+        % Each influences the neighbors in the finite-diff stencils.
         %
-        % The matrix multiplication B*vOld won't fix these automatically,
-        % so we must adjust the rhs to incorporate Dirichlet conditions in A and B.
-        
-        % i=1 => v(1)=0
-        rhs(1) = 0;  % since A(1,1)*v(1)= v(1), we want v(1) = 0 => modifies RHS
-        % Also zero out row 1 of A to ensure v(1) is pinned
-        A(1,1) = 1;   A(1,2:end) = 0;  
-        
-        % i=Nx+1 => v(Nx+1) = xGrid(end) - 1
-        bcTop = xGrid(end) - 1;  
-        rhs(Nx+1) = bcTop; 
-        A(Nx+1,:) = 0; 
-        A(Nx+1,Nx+1) = 1;
-        
-        % Solve A * vNew = rhs
-        vNew = A \ rhs;
-        
-        % Impose boundary conditions explicitly (just to remove any roundoff):
-        vNew(1)     = 0;
-        vNew(Nx+1)  = bcTop;
-        
-        % Move on
-        vOld = vNew;
+        % We need to see how L includes i=1 and i=M+1 in the row i=2 and i=M, respectively.
+        % Because the PDE for i=2 references i=1, etc.
+        %
+        % PDE row i=2 => depends on i=1 => c_im1*(U(1))
+        % PDE row i=M => depends on i=M+1 => c_ip1*(U(M+1))
+        %
+        % For the CN approach: the boundary terms appear in both B*uOld and A*uNew,
+        % so we add them to the RHS with the known boundary values from time n+1 and n.
+        %
+        % The coefficient c_im1 for row i=2 is: alpha(2)+minusBeta(2).
+        % The coefficient c_ip1 for row i=M is: alpha(M)+plusBeta(M).
+        % We'll handle them similarly.
+
+        % Row i=2 => local index 1 => lowerDiag(1) => c_im1(2)
+        c_i2 = alpha(2) + minusBeta(2);
+        boundaryVal1 = U(1,n) + U(1,n+1);  % appear in B and A
+        rhs(1) = rhs(1) - 0.5*dt*c_i2*boundaryVal1;
+
+        % Row i=M => local index M-1 => upperDiag(M-2) => c_ip1(M)
+        c_iM = alpha(M) + plusBeta(M);
+        boundaryValM = U(M+1,n) + U(M+1,n+1); 
+        rhs(end) = rhs(end) - 0.5*dt*c_iM*boundaryValM;
+
+        % Solve A*uNew = rhs
+        uNew = A \ rhs;
+
+        % Store back into U(2..M,n)
+        U(2:M, n) = uNew;
     end
-    
-    % After finishing time steps, vOld = v(x, t=0)
-    % We want the option value at x=x0 => we’ll interpolate if x0 not on the grid.
-    vAtX0 = interp1(xGrid, vOld, x0, 'linear', 'extrap');
-    
-    % The actual option price is: V(S0, M0, 0) = M0 * v(x0, 0).
-    price = M0 * vAtX0;
 
 end

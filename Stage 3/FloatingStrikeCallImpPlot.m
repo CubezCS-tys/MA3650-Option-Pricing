@@ -1,14 +1,44 @@
 % S0 = 50;
-% Min = 50;
+% Min = 30;
 % r = 0.05;
 % T = 1;
 % sigma = 0.2;
 % Smax = 500;
 % dS = 0.5;
 % dt = 0.001;
-% 
-% 
-% price = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt)
+
+S0 = 100;
+Min = 80;
+r = 0.1;
+T = 1;
+sigma = 0.4;
+Smax = 500;
+dS = 0.005;
+dt = 0.0001;
+
+
+price = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt)
+[callPrice, zGrid, matVal] = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt);
+figure; 
+plot(zGrid, matVal(:,1), 'b-','LineWidth',1.5);
+xlabel('z'); ylabel('u(z,0)'); title('Floating-Strike Lookback Call in z-space');
+grid on;
+
+% Convert the z-grid back to the stock price grid: S = Min * z.
+SGrid = Min * zGrid;
+
+% Compute the option values from the u(z,0) values:
+VGrid = Min * matVal(:,1);
+
+% Plot the option value against the stock price
+figure;
+plot(SGrid, VGrid, 'b-', 'LineWidth', 1.5);
+xlabel('Stock Price S');
+ylabel('Option Value V(S, Min, 0)');
+title('Floating-Strike Lookback Call Option Value vs. Stock Price');
+grid on;
+
+
 %     
 % S0     = 100;    % Current underlying price
 % m      = 100;    % Running minimum (constant)
@@ -26,18 +56,3 @@
 % xlabel('z'); ylabel('u(z,0)'); title('Floating-Strike Lookback Call in z-space');
 % grid on;
 
-% Example usage:
-
-S0    = 100;     % current spot
-M0    = 80;      % running minimum
-r     = 0.05;    % risk-free rate
-q     = 0.00;    % dividend yield
-sigma = 0.20;    % volatility
-T     = 1.0;     % time to maturity (in years)
-
-Nx    = 400;     % number of x steps
-Xmax  = 3.0;     % maximum x-value (S/M up to 3x or so)
-Nt    = 400;     % number of time steps
-
-price_est = LookbackFloatingCall_CN(S0, M0, r, q, sigma, T, Nx, Xmax, Nt);
-fprintf('Estimated floating-strike call price: %.4f\n', price_est);
