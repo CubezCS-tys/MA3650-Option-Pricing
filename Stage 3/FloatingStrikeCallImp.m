@@ -45,7 +45,7 @@ veti = 0:M;
 vetj = 0:N;
 % set up boundary conditions
 matval(:,N+1) = max(vetz-1,0);
-matval(1,:) = 0;
+matval(1,:) = z;
 matval(M+1,:) = (z)-exp(-r * dt * (N-vetj));
 % set up the coefficients matrix
 alpha = 0.25*dt*(sigma^2*(veti.^2) - r*veti);
@@ -69,3 +69,49 @@ end
 
 %return price, possibly by linear interpolation outside the grid
 price = Min * interp1(vetz, matval(:,1), Sz);
+
+% function [price, vetz, matval] = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt)
+% % Set up grid and adjust increments if necessary
+% Sz = S0 / Min;
+% z = Smax / Min;
+% M = round(z / dS);
+% dS = z / M;  % Adjust dS to fit the grid
+% N = round(T / dt);
+% dt = T / N;  % Adjust dt to fit the time steps
+% matval = zeros(M+1, N+1);
+% vetz = linspace(0, z, M+1)';  % Grid points in z-space
+% veti = 0:M;  % Indices for z (0 to M)
+% vetj = 0:N;
+% 
+% % Set up boundary conditions
+% matval(:, N+1) = max(vetz - 1, 0);  % Payoff at maturity (z_T - 1)
+% matval(1, :) = 0;  % Lower boundary (S=0)
+% matval(M+1, :) = vetz(end) - exp(-r * dt * (N - vetj));  % Upper boundary (z - exp(-r(T-t)))
+% 
+% % Compute coefficients with correct dS scaling
+% alpha = 0.25 * dt/dz * (sigma^2 * (veti.^2 * dS^2) - r * veti * dS);
+% beta = -0.5 * dt/dz * (sigma^2 * (veti.^2 * dS^2) + r);
+% gamma = 0.25 * dt/dz * (sigma^2 * (veti.^2 * dS^2) + r * veti * dS);
+% 
+% % Build tridiagonal matrices M1 (implicit) and M2 (explicit)
+% % M1 is for (I - 0.5*dt*A), M2 for (I + 0.5*dt*A)
+% M1 = -diag(alpha(3:M), -1) + diag(1 - beta(2:M)) - diag(gamma(2:M-1), 1);
+% M2 = diag(alpha(3:M), -1) + diag(1 + beta(2:M)) + diag(gamma(2:M-1), 1);
+% 
+% % LU decomposition of M1 for efficient solving
+% [L, U] = lu(M1);
+% 
+% % Solve backward in time
+% aux = zeros(M-1, 1);  % Vector to store boundary contributions
+% for j = N:-1:1
+%     % Contributions from boundaries (lower and upper)
+%     aux(1) = alpha(2) * (matval(1, j) + matval(1, j+1));
+%     aux(end) = gamma(M) * (matval(M+1, j) + matval(M+1, j+1));
+%     
+%     % Solve M1 * matval(2:M, j) = M2 * matval(2:M, j+1) + aux
+%     matval(2:M, j) = U \ (L \ (M2 * matval(2:M, j+1) + aux));
+% end
+% 
+% % Interpolate to find the price at the initial scaled price Sz
+% price = Min * interp1(vetz, matval(:, 1), Sz, 'linear', 0);
+% end

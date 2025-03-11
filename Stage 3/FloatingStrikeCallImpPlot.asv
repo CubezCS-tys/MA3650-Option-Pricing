@@ -14,7 +14,7 @@ T = 1;
 sigma = 0.4;
 Smax = 500;
 dS = 0.05;
-dt = 0.001;
+dt = 0.01;
 
 
 price = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt)
