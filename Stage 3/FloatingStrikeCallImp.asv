@@ -31,25 +31,35 @@
 % matval;
 
 
-function [price, vetS, matval] = FloatingStrikeCallImp(S0,Min,r,T,sigma,Smax,dS,dt)
+function [price, vetz, matval] = FloatingStrikeCallImp(S0,Min,r,T,sigma,Smax,dS,dt)
 % set up grid and adjust increments if necessary
-z = Smax/Min
-M = round(z/dS);
-dS = z/M;
+Sz = S0/Min
+zmax = Smax/Min
+M = round(zmax/dS);
+dz = zmax/M;
 N = round(T/dt);
 dt = T/N;
 matval = zeros(M+1,N+1);
-vetz = linspace(0,z,M+1)'; % Create a column vector (vetS) containing M+1 equally spaced asset prices from 0 to Smax.
+vetS = linspace(0,Smax,M+1)'; % Create a column vector (vetS) containing M+1 equally spaced asset prices from 0 to Smax.
+vetz = vetS./Min;
 veti = 0:M;
 vetj = 0:N;
+zVals = 0:dz:zmax;
 % set up boundary conditions
 matval(:,N+1) = max(vetz-1,0);
 matval(1,:) = 0;
-matval(M+1,:) = (Smax)-Min*exp(-r * dt * (N-vetj));
+matval(M+1,:) = (zmax)-exp(-r * dt * (N-vetj));
 % set up the coefficients matrix
-alpha = 0.25*dt*(sigma^2*(veti.^2) - r*veti);
-beta = -dt*0.5*(sigma^2*(veti.^2) + r);
-gamma = 0.25*dt*(sigma^2*(veti.^2) + r*veti);
+% alpha = 0.25*dt*(sigma^2*(veti.^2) - r*veti);
+% beta = -dt*0.5*(sigma^2*(veti.^2) + r);
+% gamma = 0.25*dt*(sigma^2*(veti.^2) + r*veti);
+for i = 2:M
+    zVal = zvals(i);
+    alpha(i) = 0.5*sigma^2 * (zVal^2)/(dz^2) - 0.5*r*zVal/dz;
+    beta(i)  = - (sigma^2*(zVal^2)/(dz^2) + r);
+    gamma(i) = 0.5*sigma^2 * (zVal^2)/(dz^2) + 0.5*r*zVal/dz;
+end
+
 M1 = -diag(alpha(3:M) ,-1) + diag(1-beta(2:M)) - diag(gamma(2:M-1) ,1) ;
 [L,U] = lu(M1);
 M2 = diag(alpha(3:M) ,-1) + diag(1+beta(2:M)) + diag(gamma(2:M-1) ,1);
@@ -67,4 +77,4 @@ for j=N:-1:1
 end
 
 %return price, possibly by linear interpolation outside the grid
-price = interp1(vetS, matval(:,1), S0);
+price = interp1(vetz, matval(:,1), Sz);

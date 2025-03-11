@@ -7,7 +7,7 @@
 % dS = 0.5;
 % dt = 0.001;
 
-S0 = 100;
+S0 = 70;
 Min = 80;
 r = 0.1;
 T = 1;
@@ -15,7 +15,6 @@ sigma = 0.4;
 Smax = 500;
 dS = 0.005;
 dt = 0.0001;
-
 
 price = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt)
 [callPrice, zGrid, matVal] = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt);
@@ -55,4 +54,6 @@ grid on;
 % plot(zGrid, matVal(:,1), 'b-','LineWidth',1.5);
 % xlabel('z'); ylabel('u(z,0)'); title('Floating-Strike Lookback Call in z-space');
 % grid on;
+
+
 
