@@ -7,7 +7,7 @@
 clear; clc; close all;
 
 %% Parameters
-S0       = 20;     % initial asset price
+S0       = 100;     % initial asset price
 r        = 0.1;    % risk-free interest rate
 sigma    = 0.4;     % volatility
 T        = 1;       % time to maturity (years)

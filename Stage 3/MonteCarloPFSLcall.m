@@ -9,7 +9,7 @@
 clear; clc; close all;
 
 %% Parameters
-S0       = 30;      % Initial asset price
+S0       = 100;      % Initial asset price
 fixedMin = 80;       % Fixed (locked-in) minimum, same as "Min" in your PDE
 r        = 0.1;      % Risk-free interest rate
 sigma    = 0.4;      % Volatility
