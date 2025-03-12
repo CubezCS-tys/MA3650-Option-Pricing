@@ -42,7 +42,7 @@ dt = T/N;
 matval = zeros(M+1,N+1);
 vetS = linspace(0,Smax,M+1)'; % Create a column vector (vetS) containing M+1 equally spaced asset prices from 0 to Smax.
 vetz = vetS./Min;
-veti = 0:M;
+veti = (0:M);
 vetj = 0:N;
 % set up boundary conditions
 matval(:,N+1) = max(vetz-1,0);
