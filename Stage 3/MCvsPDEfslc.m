@@ -6,8 +6,8 @@
 clear; clc; close all;
 
 %% Parameters common to both methods
-r = 0.1;
-sigma = 0.4;
+r = 0.05;
+sigma = 0.2;
 T = 1;
 fixedMin = 80;      % locked-in minimum (same as "Min" for the PDE function)
 Smax = 200;         % for the PDE grid
