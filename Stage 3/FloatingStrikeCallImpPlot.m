@@ -7,14 +7,14 @@
 % dS = 0.5;
 % dt = 0.001;
 
-S0 = 30;
+S0 = 100;
 Min = 80;
 r = 0.1;
 T = 1;
 sigma = 0.4;
 Smax = 500;
-dS = 0.005;
-dt = 0.0001;
+dS = 0.05;
+dt = 0.001;
 
 price = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt)
 [callPrice, zGrid, matVal] = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt);
