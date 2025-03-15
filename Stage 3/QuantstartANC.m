@@ -1,26 +1,56 @@
+% clc; clear; close all;
+% 
+% % Parameters
+% S_values = linspace(80, 200, 200); % Range of spot prices
+% m = 80;    % Minimum spot price over period
+% M = 400;   % Maximum spot price over period
+% r = 0.1;   % Risk-free rate (10%)
+% v = 0.4;   % Volatility (40%)
+% T = 1;     % Time to expiry (1 year)
+% 
+% % Compute Lookback Call and Put prices
+% lookback_call_prices = arrayfun(@(S) lookback_call(S, m, r, v, T), S_values);
+% %lookback_put_prices = arrayfun(@(S) lookback_put(S, M, r, v, T), S_values);
+% 
+% % Plotting
+% figure;
+% plot(S_values, lookback_call_prices, 'b', 'LineWidth', 1.5); hold on;
+% %plot(S_values, lookback_put_prices, 'r', 'LineWidth', 1.5);
+% xlabel('Stock Price (S)');
+% ylabel('Lookback Option Value');
+% title('Lookback Call and Put Option Prices vs Spot Price');
+% legend('Lookback Call', 'Lookback Put', 'Location', 'NorthWest');
+% grid on;
+
 clc; clear; close all;
 
 % Parameters
-S_values = linspace(80, 200, 200); % Range of spot prices
+S_values = linspace(80, 200, 100); % Range of stock prices
+T_values = linspace(0.01, 1, 50);  % Range of time values (avoiding T=0)
 m = 80;    % Minimum spot price over period
-M = 400;   % Maximum spot price over period
-r = 0.1;   % Risk-free rate (10%)
-v = 0.4;   % Volatility (40%)
-T = 1;     % Time to expiry (1 year)
+M = 120;
+r = 0.05;   % Risk-free rate (10%)
+v = 0.2;   % Volatility (40%)
 
-% Compute Lookback Call and Put prices
-lookback_call_prices = arrayfun(@(S) lookback_call(S, m, r, v, T), S_values);
-%lookback_put_prices = arrayfun(@(S) lookback_put(S, M, r, v, T), S_values);
+% Create a mesh grid for S and T
+[S_grid, T_grid] = meshgrid(S_values, T_values);
 
-% Plotting
+% Compute Lookback Call Prices for each (S, T)
+lookback_call_prices = arrayfun(@(S, T) lookback_call(S, m, r, v, T), S_grid, T_grid);
+lookback_put_prices = arrayfun(@(S, T) lookback_put(S, M, r, v, T), S_grid, T_grid);
+
+% 3D Surface Plot
 figure;
-plot(S_values, lookback_call_prices, 'b', 'LineWidth', 1.5); hold on;
-%plot(S_values, lookback_put_prices, 'r', 'LineWidth', 1.5);
-xlabel('Stock Price (S)');
-ylabel('Lookback Option Value');
-title('Lookback Call and Put Option Prices vs Spot Price');
-legend('Lookback Call', 'Lookback Put', 'Location', 'NorthWest');
+surf(S_grid, T_grid, lookback_call_prices);
+xlabel('Stock Price S');
+ylabel('Time to Expiry T - t');
+zlabel('Lookback Call Option Value');
+title('3D Lookback Call Option Price Surface');
+colorbar;
+shading interp;  % Smooth shading
 grid on;
+view(135, 30);  % Adjust the 3D viewing angle
+
 
 % Functions
 

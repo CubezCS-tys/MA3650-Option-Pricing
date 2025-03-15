@@ -78,8 +78,8 @@ for i = 1:length(S0_values)
 end
 
 % Convert z-space to Stock Price Grid
-% SGrid = Min * zGrid;
-% VGrid = Min * matVal(:,1); % Option value from numerical solution
+SGrid = Min * zGrid;
+VGrid = Min * matVal(:,1); % Option value from numerical solution
 
 % Plot 1: Solution in z-space (u(z,0))
 figure;

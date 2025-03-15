@@ -6,7 +6,7 @@
 % Smax = 500;
 % dS = 0.5;
 % dt = 0.001;
-
+% 
 S0 = 100;
 Min = 80;
 r = 0.1;
@@ -38,36 +38,48 @@ title('Floating-Strike Lookback Call Option Value vs. Stock Price');
 grid on;
 
 
-% S0 = 80;
-% Max = 200;
-% r = 0.1;
-% T = 1;
-% sigma = 0.4;
-% Smax = 500;
-% dS = 0.05;
-% dt = 0.001;
+% clc; clear; close all;
 % 
-% price = FloatingStrikePutImp(S0, Max, r, T, sigma, Smax, dS, dt)
-% [callPrice, zGrid, matVal] = FloatingStrikePutImp(S0, Max, r, T, sigma, Smax, dS, dt);
-% figure; 
-% plot(zGrid, matVal(:,1), 'b-','LineWidth',1.5);
-% xlabel('z'); ylabel('u(z,0)'); title('Floating-Strike Lookback Put in z-space');
-% grid on;
+% % Define parameters
+% S0    = 100;
+% Min   = 80;
+% r     = 0.05;
+% T     = 1;
+% sigma = 0.2;
+% Smax  = 500;
+% dS    = 0.005;
+% dt    = 0.0001;
 % 
-% % Convert the z-grid back to the stock price grid: S = Min * z.
-% SGrid = Max * zGrid;
+% % Compute the Floating Strike Lookback Call
+% [callPrice, zGrid, matVal] = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt);
 % 
-% % Compute the option values from the u(z,0) values:
-% VGrid = Max * matVal(:,1);
+% % Convert the z-grid back to stock price grid: S = Min * z
+% SGrid = Min * zGrid;
+% VGrid = Min * matVal;
 % 
-% % Plot the option value against the stock price
+% % Time grid (discretized from 0 to T)
+% timeGrid = linspace(0, T, size(matVal, 2));
+% 
+% % ---------------------------
+% % CHOOSE YOUR STARTING S HERE
+% % ---------------------------
+% Sstart = 80;  % or 80, 50, etc.
+% i0 = find(SGrid >= Sstart, 1, 'first');  % index where S >= Sstart
+% 
+% % Slice the data
+% SGridPlot   = SGrid(i0:end);
+% matValPlot  = VGrid(i0:end, :);
+% 
+% % 3D Surface Plot
 % figure;
-% plot(SGrid, VGrid, 'b-', 'LineWidth', 1.5);
+% surf(SGridPlot, timeGrid, matValPlot');  % Transpose so time is on Y-axis
 % xlabel('Stock Price S');
-% ylabel('Option Value V(S, Max, 0)');
-% title('Floating-Strike Lookback Put Option Value vs. Stock Price');
+% ylabel('Time to Expiry T - t');
+% zlabel('Option Value V(S, Min, t)');
+% title('Floating-Strike Lookback Call (S \ge Starting Value)');
+% colorbar;
+% shading interp;
 % grid on;
+% view(135, 30);
 % 
 % 
-
-
