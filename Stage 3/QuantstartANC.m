@@ -1,21 +1,21 @@
 clc; clear; close all;
 
 % Parameters
-S_values = linspace(1, 200, 200); % Range of spot prices
+S_values = linspace(80, 200, 200); % Range of spot prices
 m = 80;    % Minimum spot price over period
-M = 200;   % Maximum spot price over period
+M = 400;   % Maximum spot price over period
 r = 0.1;   % Risk-free rate (10%)
 v = 0.4;   % Volatility (40%)
 T = 1;     % Time to expiry (1 year)
 
 % Compute Lookback Call and Put prices
 lookback_call_prices = arrayfun(@(S) lookback_call(S, m, r, v, T), S_values);
-lookback_put_prices = arrayfun(@(S) lookback_put(S, M, r, v, T), S_values);
+%lookback_put_prices = arrayfun(@(S) lookback_put(S, M, r, v, T), S_values);
 
 % Plotting
 figure;
 plot(S_values, lookback_call_prices, 'b', 'LineWidth', 1.5); hold on;
-plot(S_values, lookback_put_prices, 'r', 'LineWidth', 1.5);
+%plot(S_values, lookback_put_prices, 'r', 'LineWidth', 1.5);
 xlabel('Stock Price (S)');
 ylabel('Lookback Option Value');
 title('Lookback Call and Put Option Prices vs Spot Price');
