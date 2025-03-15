@@ -54,10 +54,10 @@ clc; clear;close all;
 % Define Parameters
 
 Min = 50;    % Running minimum (historical min price)
-S_values = linspace(0, 400, 200); % Range of spot prices for analytical pricing
-r = 0.05;    % Risk-free rate
-sigma = 0.2; % Volatility
-T = 1;       % Time to expiry
+S_values = linspace(Min, 400, 200); % Range of spot prices for analytical pricing
+r = 0.2;    % Risk-free rate
+sigma = 0.1; % Volatility
+T = 0.4;       % Time to expiry
 
 % Compute Analytical Lookback Call Prices
 lookback_call_prices = arrayfun(@(S) lookback_call(S, Min, r, sigma, T), S_values);
@@ -68,7 +68,7 @@ dS = 0.5;    % Stock price step size
 dt = 0.01;   % Time step
 
 % Compute Numerical Solution for a range of S0 values
-S0_values = linspace(0, 400, 100); % Range of initial stock prices
+S0_values = linspace(Min, 400, 100); % Range of initial stock prices
 callPrices = zeros(size(S0_values));
 
 for i = 1:length(S0_values)
@@ -80,14 +80,6 @@ end
 % Convert z-space to Stock Price Grid
 % SGrid = Min * zGrid;
 % VGrid = Min * matVal(:,1); % Option value from numerical solution
-
-% Plot 1: Solution in z-space (u(z,0))
-figure;
-plot(zGrid, matVal(:,1), 'g-', 'LineWidth', 1.5);
-xlabel('z');
-ylabel('u(z,0)');
-title('Floating-Strike Lookback Call in z-space');
-grid on;
 
 % Plot 2: Compare Analytical vs Numerical Solution vs Stock Price
 figure;

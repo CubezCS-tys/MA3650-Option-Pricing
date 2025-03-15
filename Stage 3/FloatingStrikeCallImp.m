@@ -53,7 +53,7 @@ veti = 0:M;
 vetj = 0:N;
 % set up boundary conditions
 matval(:,N+1) = max(vetS-Min,0);
-matval(1,:) = 0 ;
+matval(1,:) = Min ;
 matval(M+1,:) = Smax-(Min)*exp(-r * dt*(N-vetj));
 %set up the tridiagonal coefficients matrix
 % alpha = 0.25*dt*(sigma^2*(veti.^2) - r*veti);
