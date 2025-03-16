@@ -13,8 +13,8 @@ lookback_put_prices = arrayfun(@(S) lookback_put(S, Max, r, sigma, T), S_values)
 
 % Numerical Crank-Nicholson Parameters
 Smax = 500;   % Maximum stock price in the numerical grid
-dS = 0.5;    % Stock price step size
-dt = 0.01;   % Time step
+dS = 0.05;    % Stock price step size
+dt = 0.001;   % Time step
 
 % Compute Numerical Solution for a range of S0 values
 S0_values = linspace(0, Max, 100); % Range of initial stock prices

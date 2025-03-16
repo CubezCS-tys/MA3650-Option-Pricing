@@ -6,17 +6,17 @@
 clear; clc; close all;
 
 %% Parameters common to both methods
-r = 0.05;
-sigma = 0.2;
+r = 0.1;
+sigma = 0.4;
 T = 1;      
 Smax = 200;         % for the PDE grid
-dS = 0.005;           % spatial grid spacing for PDE (in scaled space)
-dtPDE = 0.0001;      % time step for PDE
-numPaths = 100000;  % Monte Carlo: number of simulated paths
-numSteps = 1000;    % Monte Carlo: number of time steps
+dS = 0.5;           % spatial grid spacing for PDE (in scaled space)
+dtPDE = 0.01;      % time step for PDE
+numPaths = 10000;  % Monte Carlo: number of simulated paths
+numSteps = 100;    % Monte Carlo: number of time steps
 
 %% Range of initial stock prices S0 (must be >= fixedMin)
-S0_values = linspace(1, 100, 100);
+S0_values = linspace(1, 300, 100);
 PDE_prices = zeros(size(S0_values));
 MC_prices = zeros(size(S0_values));
 
@@ -37,6 +37,8 @@ end
 figure;
 % plot(S0_values, PDE_prices, 'b-o', 'LineWidth', 2);
 % hold on;
+plot(S0_values, PDE_prices, 'b-o', 'LineWidth', 2);
+hold on;
 plot(S0_values, MC_prices, 'r-s', 'LineWidth', 2);
 xlabel('Initial Stock Price, S_0');
 ylabel('Option Price');

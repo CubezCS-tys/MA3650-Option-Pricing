@@ -1,31 +1,31 @@
 % ==============
 % Parameters
 % ==============
-S0    = 100;
-Min   = 80;
+S0    = 151;
+Max   = 200;
 r     = 0.1;
 T     = 1;
 sigma = 0.4;
 Smax  = 500;
-dS    = 0.05;
-dt    = 0.001;
+dS    = 0.5;
+dt    = 0.01;
 
 % ==============
 % Solve PDE
 % ==============
-[callPrice, zGrid, matVal] = FloatingStrikeCallImp(S0, Min, r, T, sigma, Smax, dS, dt);
+[callPrice, zGrid, matVal] = FloatingStrikePutImp(S0, Max, r, T, sigma, Smax, dS, dt);
 
 % ---------------------------
 % 1) Convert z -> S,  u(z) -> V(S)
 % ---------------------------
-SGrid = Min .* zGrid;            % Real-space stock price
-V0    = Min .* matVal(:,1);      % Option value at t=0
-VT    = Min .* matVal(:,end);    % Option "value" at t=T (the payoff)
+SGrid = Max .* zGrid;            % Real-space stock price
+V0    = Max .* matVal(:,1);      % Option value at t=0
+VT    = Max .* matVal(:,end);    % Option "value" at t=T (the payoff)
 
 % ---------------------------
 % 2) Restrict plots to S >= Min
 % ---------------------------
-idx = find(SGrid >= Min, 1);  % first index where SGrid >= Min
+idx = find(SGrid <= Max, 1);  % first index where SGrid >= Min
 
 % ---------------------------
 % 3) Plot initial value and terminal payoff on the same axes
@@ -37,7 +37,7 @@ plot(SGrid(idx:end), VT(idx:end), 'r--','LineWidth',1.5);
 xlabel('Stock Price S');
 ylabel('Option Value V(S)');
 legend('Value at t=0','Payoff at t=T','Location','NorthWest');
-title('Floating-Strike Lookback Call');
+title('Floating-Strike Lookback Put');
 grid on;
 
 % ---------------------------

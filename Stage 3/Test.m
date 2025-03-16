@@ -53,11 +53,11 @@ clc; clear;close all;
 
 % Define Parameters
 
-Min = 50;    % Running minimum (historical min price)
+Min = 80;    % Running minimum (historical min price)
 S_values = linspace(Min, 400, 200); % Range of spot prices for analytical pricing
-r = 0.2;    % Risk-free rate
-sigma = 0.1; % Volatility
-T = 0.4;       % Time to expiry
+r = 0.1;    % Risk-free rate
+sigma = 0.4; % Volatility
+T = 1;       % Time to expiry
 
 % Compute Analytical Lookback Call Prices
 lookback_call_prices = arrayfun(@(S) lookback_call(S, Min, r, sigma, T), S_values);
