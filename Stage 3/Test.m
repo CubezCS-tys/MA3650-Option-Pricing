@@ -54,7 +54,7 @@ clc; clear;close all;
 % Define Parameters
 
 Min = 80;    % Running minimum (historical min price)
-S_values = linspace(Min, 400, 200); % Range of spot prices for analytical pricing
+S_values = linspace(0, 400, 200); % Range of spot prices for analytical pricing
 r = 0.1;    % Risk-free rate
 sigma = 0.4; % Volatility
 T = 1;       % Time to expiry
@@ -68,7 +68,7 @@ dS = 0.5;    % Stock price step size
 dt = 0.01;   % Time step
 
 % Compute Numerical Solution for a range of S0 values
-S0_values = linspace(Min, 400, 100); % Range of initial stock prices
+S0_values = linspace(0, 400, 100); % Range of initial stock prices
 callPrices = zeros(size(S0_values));
 
 for i = 1:length(S0_values)
